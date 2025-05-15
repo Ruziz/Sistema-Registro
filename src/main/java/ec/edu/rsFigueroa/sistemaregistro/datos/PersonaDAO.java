@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import modelo.Cliente;
+import modelo.Empleado;
 import util.persistenceUtil;
 
 public class PersonaDAO {
@@ -221,5 +223,112 @@ public class PersonaDAO {
             em.close();
         }
     }
+    
+    public List<Persona> ListarPersonasRegistradas() {
+        // Inicia la sesion de trabajo con la base de datos
+        EntityManager em = persistenceUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            // Devuelve el listado de la busqueda
+            return em.createQuery("SELECT c FROM Cliente c", Persona.class).getResultList();
+        } finally {
+            em.close();
+        }
+    }
 
+    public List<Empleado> obtenerEmpleados() {
+        EntityManager em = persistenceUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            return em.createQuery("SELECT e FROM Empleado e", Empleado.class)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public boolean ActualizarEmpleado(int id, Empleado empleadoActualizar) {
+        EntityManager em = persistenceUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            Empleado existente = em.find(Empleado.class, id);
+            if (existente == null) {
+                return false;
+            }
+
+            em.getTransaction().begin();
+
+            // Campos heredados de Persona
+            existente.setNombre(empleadoActualizar.getNombre());
+            existente.setApellido(empleadoActualizar.getApellido());
+            existente.setCedula(empleadoActualizar.getCedula());
+            existente.setCorreo(empleadoActualizar.getCorreo());
+            existente.setFecha_nacimiento(empleadoActualizar.getFecha_nacimiento());
+            existente.setEdad(empleadoActualizar.getEdad());
+
+            // Campos específicos de Empleado
+            existente.setRol(empleadoActualizar.getRol());
+            existente.setFechaIngreso(empleadoActualizar.getFechaIngreso());
+            existente.setActivo(empleadoActualizar.isActivo());
+            existente.setTelefono(empleadoActualizar.getTelefono());
+
+            em.getTransaction().commit();
+            return true;
+
+        } catch (Exception ex) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            ex.printStackTrace(); // para depurar errores
+            return false;
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<Cliente> obtenerTodosLosClientes() {
+        EntityManager em = persistenceUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            return em.createQuery("SELECT c FROM Cliente c", Cliente.class)
+                    .getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
+
+    public boolean ActualizarCliente(int id, Cliente clienteActualizar) {
+        EntityManager em = persistenceUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            Cliente existente = em.find(Cliente.class, id);
+            if (existente == null) {
+                return false;
+            }
+
+            em.getTransaction().begin();
+
+            // Campos heredados de Persona
+            existente.setNombre(clienteActualizar.getNombre());
+            existente.setApellido(clienteActualizar.getApellido());
+            existente.setCedula(clienteActualizar.getCedula());
+            existente.setCorreo(clienteActualizar.getCorreo());
+            existente.setFecha_nacimiento(clienteActualizar.getFecha_nacimiento());
+            existente.setEdad(clienteActualizar.getEdad());
+
+            // Campos propios del Cliente (si los tiene)
+            existente.setDireccion(clienteActualizar.getDireccion());
+            existente.setTelefono(clienteActualizar.getTelefono());
+
+            em.getTransaction().commit();
+            return true;
+
+        } catch (Exception ex) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            ex.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
 }
